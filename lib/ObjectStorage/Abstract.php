@@ -596,6 +596,41 @@ abstract class ObjectStorage_Abstract
     }
 
     /**
+     * Performs a safe deletion of containers & objects.
+     * This function checks to see if attempting to delete a container.  If so, it only allows it do delete it if it's empty.
+     * Otherwise, it will spit out an exception.  If it's an object, the object is deleted immediately.
+     *
+     * @return bool
+     **/
+    public function safeDelete()
+    {
+	// Get the headers for the object/container we wish to delete
+	$info = $this->objectStorage->get($this, false);
+	$headers = $this->getHeaders();
+
+	// Container?  (default: no)
+	$c = 0;
+
+	// X-container-read is only set in headers for containers
+	if(array_key_exists("X-container-read", $headers))
+	    $c = 1;
+	// We are working with a directory if the content-type says so (currently, no error checking for this case)
+	else if($headers['Content-type'] == "application/directory")
+	    $c = 2;
+
+	return $this->objectStorage->safeDelete($this, $c);
+    }
+
+    public function isDirectoryEmpty($dir){
+		$search = $this->setContext('search')->setFilter('type', 'object')->setFilter('q', $dir . "/*")->setMime('json')->get();
+		$body = $search->getBody();
+		$json = json_decode($body, false);
+		array_shift($json);
+
+		return (empty($json[0]) ? 1 : 0);
+    }
+
+    /**
      * Reloads the current object with the newly retrieved data from ObjectStorage.
      * Synonym of ObjectStorage_Abstract::get method
      *
