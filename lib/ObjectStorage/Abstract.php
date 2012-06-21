@@ -608,7 +608,7 @@ abstract class ObjectStorage_Abstract
 	$info = $this->objectStorage->get($this, false);
 	$headers = $this->getHeaders();
 
-	// Container?  (default: no)
+	// 0 - object, 1 - container, 2 - directory
 	$c = 0;
 
 	// X-container-read is only set in headers for containers
@@ -621,12 +621,28 @@ abstract class ObjectStorage_Abstract
 	return $this->objectStorage->safeDelete($this, $c);
     }
 
+    /**
+     * Checks (via search) if directory ($dir) is empty.
+     * To use by itself: $object->with('container')->isDirectoryEmpty('<directory given here>')
+     *
+     * @param $dir - The object/directory to check
+     *
+     * @return bool
+     **/
     public function isDirectoryEmpty($dir){
+    		// Search <container>/<$dir>/* to see if any files exist in the directory.
 		$search = $this->setContext('search')->setFilter('type', 'object')->setFilter('q', $dir . "/*")->setMime('json')->get();
+		
+		// Get the results
 		$body = $search->getBody();
+		
+		// Decode json-formatted data without being in an associative array
 		$json = json_decode($body, false);
+		
+		// The first entry will be $dir, so we remove it
 		array_shift($json);
 
+		// If there is nothing in $json[0] then we know it's empty
 		return (empty($json[0]) ? 1 : 0);
     }
 
