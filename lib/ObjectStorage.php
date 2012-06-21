@@ -551,6 +551,14 @@ class ObjectStorage
 	return false;
 	}
 
+    /**
+     * Checks to see if directory is empty.  Error checking on if $dir is a file or not is done in safeDelete()
+     *
+     * @param objectStorageObject
+     * @param $dir - The directory/object to check
+     *
+     * @return bool
+     **/
     public function emptyDirectory(ObjectStorage_Abstract $objectStorageObject, $dir){
 	return $objectStorageObject->isDirectoryEmpty($dir);
     }
