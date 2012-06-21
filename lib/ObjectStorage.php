@@ -521,6 +521,40 @@ class ObjectStorage
         }
     }
 
+   /**
+    * Determines if a ObjectStorage is empty or not before attempting deletion.
+    * If it is not empty, an exception is given.  Otherwise, continue on with delete() call.
+    *
+    * @param ObjectStorage_Abstract $objectStorageObject
+    *
+    * @return bool
+    **/
+    public function safeDelete(ObjectStorage_Abstract $objectStorageObject, $container)
+    {
+	$entry = $objectStorageObject->get();
+
+	if($container == 0){
+		$this->delete($objectStorageObject);
+	} else if($container == 1){
+		if($objectStorageObject->getObjectCount() != 0)
+			throw new ObjectStorage_Exception_Http("Container is not empty.  Any attempt to delete objects can cause orphan data.", 404);
+		else
+			return $this->delete($objectStorageObject);
+	} else{
+		// We have a directory
+		if($this->emptyDirectory($objectStorageObject, $container) != 1)
+			throw new ObjectStorage_Exception_Http("Directory is not empty.  Deletion will not happen.", 404);
+		else
+			return $this->delete($objectStorageObject);
+	}
+
+	return false;
+	}
+
+    public function emptyDirectory(ObjectStorage_Abstract $objectStorageObject, $dir){
+	return $objectStorageObject->isDirectoryEmpty($dir);
+    }
+
     protected function isAcceptableResponse($responseCode = 0)
     {
         return intval($responseCode / 200) == 1 ? true : false;
